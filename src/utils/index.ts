@@ -7,11 +7,11 @@ import { GetCacheByKey, SaveCacheByKey } from "./storage";
  */
 export function getQueryParams(url = location.href) {
   let locationStrs = url.match(/([^&/?#]+=[^&/?#]*)|[?&]([^&/?#]+)/gim) || [];
-  locationStrs = locationStrs.join('/').replace(/[?&]/gim, '').split('/');
+  locationStrs = locationStrs.join("/").replace(/[?&]/gim, "").split("/");
   var params = locationStrs;
   var qsObj: any = {};
   params.map(function (item: string) {
-    var keyValues = item.split('=');
+    var keyValues = item.split("=");
     qsObj[decodeURIComponent(keyValues[0])] = decodeURIComponent(keyValues[1]);
   });
   return qsObj;
@@ -22,8 +22,8 @@ export function getQueryParams(url = location.href) {
  * @returns 解析后的url参数与去除忽略key值的字符串
  */
 export function getQueryParamsStr(
-  ignoreKeys: string[] = ['state', 'code', 'appid'],
-  url = location.href
+  ignoreKeys: string[] = ["state", "code", "appid"],
+  url = location.href,
 ) {
   let query = getQueryParams(url);
   let queryStr = Object.keys(query)
@@ -31,20 +31,19 @@ export function getQueryParamsStr(
     .map((key) => {
       return `${key}=${encodeURIComponent(query[key])}`;
     })
-    .join('&');
+    .join("&");
   return {
     query,
     queryStr,
   };
 }
-export function concatQuery(
-  query: any = {},
-  url = location.href
-) {
-  url += /\?/.test(url) ? '&' : '?';
-  url += Object.keys(query).map((key) => {
-    return key + '=' + query[key]
-  }).join('&')
+export function concatQuery(query: any = {}, url = location.href) {
+  url += /\?/.test(url) ? "&" : "?";
+  url += Object.keys(query)
+    .map((key) => {
+      return key + "=" + query[key];
+    })
+    .join("&");
   return url;
 }
 /**
@@ -55,8 +54,8 @@ export function concatQuery(
  */
 export function removeQuery(keys: string[] = [], url = location.href) {
   keys.forEach((key) => {
-    url = url.replace(new RegExp(`${key}=[^&/?#]*&?`, 'gim'), '')
-  })
+    url = url.replace(new RegExp(`${key}=[^&/?#]*&?`, "gim"), "");
+  });
   return url;
 }
 /**
@@ -65,23 +64,21 @@ export function removeQuery(keys: string[] = [], url = location.href) {
  */
 export function getClientKey() {
   const clientKey =
-    GetCacheByKey("clientKey") || (Date.now() + Math.random() * 10000000).toString(32);
+    GetCacheByKey("clientKey") ||
+    (Date.now() + Math.random() * 10000000).toString(32);
   SaveCacheByKey({ key: "clientKey", res: clientKey, cache: -1 });
-  return clientKey
+  return clientKey;
 }
 /**
- * 对用户id和导购id加密一下
- * @param userId 用户id
- * @param guideId 导购id
- * @returns 用户id、导购id
+ * 兑换2个值的前10位
+ * @param str1  字符串1
+ * @param str2  字符串2
+ * @returns str1/str2
  */
-export function cryptId(userId: string, guideId: string) {
-  let gindex = ('' + guideId).slice(0, 10);
-  let uindex = ('' + userId).slice(0, 10);
-  guideId = ('' + guideId).replace(gindex, uindex);
-  userId = ('' + userId).replace(uindex, gindex);
-  return {
-    guideId,
-    userId,
-  };
+export function cryptId(str1: string, str2: string) {
+  let gindex = ("" + str2).slice(0, 10);
+  let uindex = ("" + str1).slice(0, 10);
+  str2 = ("" + str2).replace(gindex, uindex);
+  str1 = ("" + str1).replace(uindex, gindex);
+  return [str1, str2];
 }

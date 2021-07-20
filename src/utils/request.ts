@@ -1,12 +1,8 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { cryptId, getClientKey, getQueryParams } from "./index";
-import { GetCacheByKey } from "./storage";
 import CONFIG from "@/config/index";
-const clientKey = getClientKey();
 const defaultAxios = getRequest();
 const baseURL = CONFIG.apiBase;
 defaultAxios.defaults.baseURL = baseURL;
-const commonAxios = Axios.create();
 function getRequest(
   options?: AxiosRequestConfig & { successCode: string | number },
 ) {
