@@ -1,0 +1,11 @@
+stages:
+  - lint
+# 缓存node_modules目录，每次构建的时候不要删除
+cache:
+  paths:
+    - node_modules
+lint:
+  stage: lint
+  script:
+    - yarn install
+    - yarn lint

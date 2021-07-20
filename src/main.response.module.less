@@ -1,0 +1,35 @@
+.main-1{
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.main-test{
+  padding: 20px;
+}
+@keyframes rotate {
+  25% {
+    transform: rotate(90deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.logo-test {
+  width: 200px;
+  background: transparent;
+  transition: transform 1s linear;
+  animation: rotate infinite linear forwards 3s;
+}

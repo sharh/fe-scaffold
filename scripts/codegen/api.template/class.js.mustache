@@ -1,0 +1,28 @@
+
+import {request} from '../utils/requestUtil';
+export function shouldRemoveContentType(body){
+  /** Blob,
+  File,
+  FormData,
+  Int8Array,
+  Uint8Array,
+  Uint8ClampedArray,
+  Int16Array,
+  Uint16Array,
+  Int32Array,
+  Uint32Array,
+  Float32Array,
+  Float64Array,
+  DataView
+  */
+  if(body instanceof Blob || body instanceof File ||body instanceof FormData ||body instanceof Int8Array ||body instanceof Uint8Array ||body instanceof Uint8ClampedArray ||body instanceof Int16Array ||body instanceof Uint16Array ||body instanceof Uint16Array ||body instanceof Int32Array ||body instanceof Uint32Array ||body instanceof Float32Array ||body instanceof Float64Array ||body instanceof DataView){
+    return true;
+  }
+  return false;
+}
+// 开始服务的方法定义
+// 当前服务：{{&description}}
+
+{{#methods}}
+  {{> method}}
+{{/methods}}

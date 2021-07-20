@@ -1,0 +1,108 @@
+
+/**
+* {{&summary}}
+* @method
+{{#isDeprecated}}
+* @deprecated
+{{/isDeprecated}}
+{{#externalDocs}}
+* @see {@link {{&url}}|{{#description}}{{&description}}{{/description}}{{^description}}External docs{{/description}}}
+{{/externalDocs}}
+* @name {{&className}}#{{&methodName}}
+{{#parameters}}
+    {{^isSingleton}} * @param {{#type}}{{=<% %>=}}{<%&type%>}<%={{ }}=%>{{/type}}{{^type}}{{#tsType}}{{=<% %>=}}{<%&target%>}<%={{ }}=%>{{/tsType}}{{/type}} {{&camelCaseName}} - {{&description}}{{/isSingleton}}
+{{/parameters}}
+*/
+export function {{&methodName}}(parameters) {
+    const domain = parameters.domain ? parameters.domain : "{{&domain}}";
+    let path = '{{&path}}';
+    if (parameters.parsePath) {
+        path = (typeof(parameters.parsePath) === 'function') ? parameters.parsePath(path) : parameters.parsePath;
+    }
+
+    let body;
+    let params = {};
+    let headers = {};
+    let form = {};
+    return new Promise((resolve, reject) => {
+      {{#headers}}
+          headers['{{&name}}'] = {{&value}};
+      {{/headers}}
+
+      {{#parameters}}
+
+          {{#isQueryParameter}}
+              {{#isSingleton}}
+                  params['{{&name}}'] = '{{&singleton}}';
+              {{/isSingleton}}
+              {{^isSingleton}}
+                  {{#isPatternType}}
+                      Object.keys(parameters).forEach(function(parameterName) {
+                          if(new RegExp('{{&pattern}}').test(parameterName)){
+                              params[parameterName] = parameters[parameterName];
+                          }
+                      });
+                  {{/isPatternType}}
+                  {{^isPatternType}}
+                      if(parameters['{{&camelCaseName}}'] !== undefined) {
+                          params['{{&name}}'] = parameters['{{&camelCaseName}}'];
+                      }
+                  {{/isPatternType}}
+              {{/isSingleton}}
+          {{/isQueryParameter}}
+
+          {{#isPathParameter}}
+              path = path.replace('{{=<% %>=}}{<%&name%>}<%={{ }}=%>', `${parameters['{{&camelCaseName}}']}`);
+          {{/isPathParameter}}
+
+          {{#isHeaderParameter}}
+              {{#isSingleton}}
+                  headers['{{&name}}'] = '{{&singleton}}';
+              {{/isSingleton}}
+              {{^isSingleton}}
+                  if(parameters['{{&name}}'] !== undefined) {
+                      headers['{{&name}}'] = parameters['{{&name}}'];
+                  }
+              {{/isSingleton}}
+          {{/isHeaderParameter}}
+
+          {{#isBodyParameter}}
+              if(parameters['{{&camelCaseName}}'] !== undefined) {
+                  body = parameters['{{&camelCaseName}}'];
+              }
+          {{/isBodyParameter}}
+
+          {{#isFormParameter}}
+              {{#isSingleton}}
+                form['{{&name}}'] = '{{&singleton}}';
+              {{/isSingleton}}
+              {{^isSingleton}}
+                  if(parameters['{{&camelCaseName}}'] !== undefined) {
+                      form['{{&name}}'] = parameters['{{&camelCaseName}}'];
+                  }
+              {{/isSingleton}}
+          {{/isFormParameter}}
+
+          {{#required}}
+              if(parameters['{{&camelCaseName}}'] === undefined) {
+                  reject(new Error('Missing required {{&paramType}} parameter: {{&camelCaseName}}'));
+                  return;
+              }
+          {{/required}}
+
+      {{/parameters}}
+
+      if(parameters.$params) {
+          params = { ...params, ...parameters.$params };
+      }
+
+      if(Object.keys(form).length){
+        // multipart/form-data; 格式删除content-type的定义，服务器不支持自定义这个
+        delete headers['Content-Type'];
+      }
+      const url = domain + path;
+      const options = {method: "{{&method}}", data: body || form, headers, params, ...parameters.$options};
+      console.log('[request]', url, options);
+      request(url, options).then(resolve).catch(reject);
+    });
+}

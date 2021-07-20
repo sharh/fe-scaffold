@@ -1,0 +1,151 @@
+apiVersion: v1
+data:
+  default.conf: |-
+    server {
+      listen 80;
+      location / {
+        alias /data/nginx/;
+        try_files $uri $uri/ /index.html;
+        index index.html;
+        add_header Cache-Control no-store;
+      }
+      location /api {
+        # 日志：access_log 日志文件地址 日志格式名称
+        # 隐藏请求返回头，proxy_hide_header 请求头名称
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Credentials;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Allow-Methods;
+        #proxy_set_header Host $host;
+        #proxy_set_header X-Real-IP $remote_addr;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass   http://www.baidu.com;
+        # 添加http相应头 add_header 请求头名称 请求头值 always(不管httpCode是什么，总是返回该请求头)
+        # 不添加always，只会在206/200/304等正常的响应时才会返回该请求头
+        # $http_name 获取请求头，如这里的origin即获取请求头中的origin，其他格式以下划线来设置，
+        # 如获取Content-Type：$http_content_type
+        add_header Access-Control-Allow-Origin $http_origin always;
+        add_header Access-Control-Allow-Credentials true always;
+        add_header Access-Control-Allow-Headers Content-Type,uuid,Set-Cookie always;
+        add_header Access-Control-Allow-Methods GET,POST,DELETE,PUT,OPTIONS always;
+      }
+      location /api/auth {
+        # 日志：access_log 日志文件地址 日志格式名称
+        # 隐藏请求返回头，proxy_hide_header 请求头名称
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Credentials;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Allow-Methods;
+        #proxy_set_header Host $host;
+        #proxy_set_header X-Real-IP $remote_addr;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass   http://www.baidu.com;
+        # 添加http相应头 add_header 请求头名称 请求头值 always(不管httpCode是什么，总是返回该请求头)
+        # 不添加always，只会在206/200/304等正常的响应时才会返回该请求头
+        # $http_name 获取请求头，如这里的origin即获取请求头中的origin，其他格式以下划线来设置，
+        # 如获取Content-Type：$http_content_type
+        add_header Access-Control-Allow-Origin $http_origin always;
+        add_header Access-Control-Allow-Credentials true always;
+        add_header Access-Control-Allow-Headers Content-Type,uuid,Set-Cookie always;
+        add_header Access-Control-Allow-Methods GET,POST,DELETE,PUT,OPTIONS always;
+      }
+      location /health {
+        default_type text/plain;
+        return 200 'ok';
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: fe-scaffold-conf
+  namespace: fe
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: fe-scaffold
+  name: fe-scaffold
+  namespace: fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: fe-scaffold
+  strategy:
+    # 滚动更新策略
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: fe-scaffold
+    spec:
+      containers:
+        - image: ${CICD_IMAGE}:${CICD_EXECUTION_SEQUENCE}
+          imagePullPolicy: Always
+          name: fe-scaffold
+          ports:
+            - containerPort: 80
+              name: http-80
+              protocol: TCP
+          # 就绪检查
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /health
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            successThreshold: 2
+            timeoutSeconds: 30
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              name: fe-scaffold-conf
+            - mountPath: /data/key
+              name: key
+          # 资源限制
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      # 配置映射
+      volumes:
+        - configMap:
+            items:
+              - key: default.conf
+                path: default.conf
+            name: fe-scaffold-conf
+          name: fe-scaffold-conf
+        - configMap:
+            defaultMode: 256
+            name: miniprogram-key
+            optional: false
+          name: key
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: fe-scaffold
+  name: fe-scaffold
+  namespace: fe
+spec:
+  ports:
+    - name: http-80
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    k8s-app: fe-scaffold
+  type: ClusterIP
