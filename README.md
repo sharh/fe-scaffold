@@ -1,12 +1,3 @@
-<!--
- * @Author: your name
- * @Date: 2021-07-15 09:51:34
- * @LastEditTime : 2021-07-20 18:05:05
- * @LastEditors  : hmw
- * @Description: In User Settings Edit
- * @FilePath: \fe-scaffold\README.md
--->
-
 # 项目说明
 
 ## 关于技术栈
